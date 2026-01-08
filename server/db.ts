@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { and, desc, eq, gte, lte, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { Beat, beats, InsertBeat, InsertPurchase, InsertSubmission, InsertUser, purchases, Submission, submissions, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,123 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Beats queries
+export async function createBeat(beat: InsertBeat): Promise<Beat> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(beats).values(beat);
+  const insertedBeat = await db.select().from(beats).where(eq(beats.id, Number(result[0].insertId))).limit(1);
+  return insertedBeat[0]!;
+}
+
+export async function getAllBeats(): Promise<Beat[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(beats).where(eq(beats.isActive, "true")).orderBy(desc(beats.createdAt));
+}
+
+export async function getBeatById(id: number): Promise<Beat | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(beats).where(eq(beats.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateBeat(id: number, beat: Partial<InsertBeat>): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(beats).set(beat).where(eq(beats.id, id));
+}
+
+export async function deleteBeat(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(beats).set({ isActive: "false" }).where(eq(beats.id, id));
+}
+
+export async function filterBeats(filters: {
+  genre?: string;
+  mood?: string;
+  minBpm?: number;
+  maxBpm?: number;
+}): Promise<Beat[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [eq(beats.isActive, "true")];
+
+  if (filters.genre) {
+    conditions.push(eq(beats.genre, filters.genre));
+  }
+  if (filters.mood) {
+    conditions.push(eq(beats.mood, filters.mood));
+  }
+  if (filters.minBpm !== undefined) {
+    conditions.push(gte(beats.bpm, filters.minBpm));
+  }
+  if (filters.maxBpm !== undefined) {
+    conditions.push(lte(beats.bpm, filters.maxBpm));
+  }
+
+  return db.select().from(beats).where(and(...conditions)).orderBy(desc(beats.createdAt));
+}
+
+// Submissions queries
+export async function createSubmission(submission: InsertSubmission): Promise<Submission> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(submissions).values(submission);
+  const insertedSubmission = await db.select().from(submissions).where(eq(submissions.id, Number(result[0].insertId))).limit(1);
+  return insertedSubmission[0]!;
+}
+
+export async function getAllSubmissions(): Promise<Submission[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(submissions).orderBy(desc(submissions.createdAt));
+}
+
+export async function getSubmissionById(id: number): Promise<Submission | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(submissions).where(eq(submissions.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateSubmissionStatus(id: number, status: "pending" | "reviewed" | "accepted" | "rejected"): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(submissions).set({ status }).where(eq(submissions.id, id));
+}
+
+// Purchases queries
+export async function createPurchase(purchase: InsertPurchase) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(purchases).values(purchase);
+  return result[0].insertId;
+}
+
+export async function getPurchasesByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(purchases).where(eq(purchases.buyerEmail, email)).orderBy(desc(purchases.createdAt));
+}
+
+export async function updatePurchaseStatus(id: number, status: "pending" | "completed" | "failed"): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(purchases).set({ status }).where(eq(purchases.id, id));
+}
