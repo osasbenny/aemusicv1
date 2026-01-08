@@ -105,6 +105,6 @@
 - [x] Add design credits footer to all pages
 - [x] Link to Cactus Digital Media website
 - [x] Run seed script to populate database
-- [ ] Test website with dummy content
-- [ ] Rebuild production with new content
-- [ ] Push changes to both GitHub repositories
+- [x] Test website with dummy content
+- [x] Rebuild production with new content
+- [x] Push changes to both GitHub repositories
