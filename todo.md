@@ -89,5 +89,5 @@
 - [x] Create favicon from logo
 - [x] Update website navigation with logo
 - [x] Update app configuration with logo path
-- [ ] Rebuild production with new assets
-- [ ] Push changes to GitHub
+- [x] Rebuild production with new assets
+- [x] Push changes to GitHub
