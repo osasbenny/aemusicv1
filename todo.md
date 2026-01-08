@@ -75,6 +75,11 @@
 - [ ] Test Stripe payment flow end-to-end
 - [x] Test file upload and download functionality
 - [x] Test email notifications
-- [ ] Create checkpoint
-- [ ] Connect to GitHub repository
-- [ ] Push code to GitHub
+- [x] Create checkpoint
+- [x] Connect to GitHub repository
+- [ ] Push code to GitHub (requires user authentication)
+
+## Production Build for cPanel
+- [ ] Create production build with pnpm build
+- [ ] Include dist folder in GitHub repository
+- [ ] Push updated code to GitHub
