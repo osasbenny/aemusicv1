@@ -1,4 +1,5 @@
 import { Navigation } from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Music, Upload, Sparkles } from "lucide-react";
@@ -134,12 +135,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 bg-background border-t border-border">
-        <div className="container text-center text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} AE Music Lab - A Division of Armhen Entertainment. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

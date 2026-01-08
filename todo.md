@@ -91,3 +91,20 @@
 - [x] Update app configuration with logo path
 - [x] Rebuild production with new assets
 - [x] Push changes to GitHub
+
+## Separate Dist Repository
+- [x] Create separate directory for dist-only repository
+- [x] Copy dist folder contents
+- [x] Initialize git repository
+- [x] Connect to aemusicv1 GitHub repository
+- [x] Push dist build to GitHub
+
+## Content & Design Credits
+- [x] Create database seeding script with dummy beats
+- [x] Generate placeholder audio files for beats
+- [x] Add design credits footer to all pages
+- [x] Link to Cactus Digital Media website
+- [x] Run seed script to populate database
+- [ ] Test website with dummy content
+- [ ] Rebuild production with new content
+- [ ] Push changes to both GitHub repositories
