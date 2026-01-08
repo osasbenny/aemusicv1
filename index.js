@@ -1025,10 +1025,32 @@ var appRouter = router({
         fileName: input.fileName
       });
       await notifyOwner({
-        title: "New Music Submission",
-        content: `New submission from ${input.artistName} (${input.email})
-Song: ${input.songTitle}
-Type: ${input.fileType}`
+        title: "\u{1F3B5} New Music Submission - AE Music Lab",
+        content: `
+**New Artist Submission Received**
+
+**Artist Details:**
+- Name: ${input.artistName}
+- Email: ${input.email}
+
+**Song Information:**
+- Title: ${input.songTitle}
+- File Type: ${input.fileType.toUpperCase()}
+- File Name: ${input.fileName}
+
+**Message from Artist:**
+${input.message || "No message provided"}
+
+**File Access:**
+Download Link: ${fileUrl}
+
+**Action Required:**
+Please review this submission and respond to the artist at ${input.email}
+
+---
+This notification was sent to: cactusdigitalmedialtd@gmail.com
+From: AE Music Lab Submission System
+          `.trim()
       });
       return submission;
     }),
