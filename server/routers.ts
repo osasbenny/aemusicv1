@@ -6,6 +6,7 @@ import { z } from "zod";
 import * as db from "./db";
 import { storagePut } from "./storage";
 import { notifyOwner } from "./_core/notification";
+import { sendArtistConfirmation } from "./email";
 import { TRPCError } from "@trpc/server";
 import { nanoid } from "nanoid";
 import Stripe from "stripe";
@@ -210,7 +211,7 @@ export const appRouter = router({
           fileName: input.fileName,
         });
 
-        // Send detailed email notification
+        // Send detailed email notification to admin
         await notifyOwner({
           title: "🎵 New Music Submission - AE Music Lab",
           content: `
@@ -239,6 +240,9 @@ This notification was sent to: cactusdigitalmedialtd@gmail.com
 From: AE Music Lab Submission System
           `.trim(),
         });
+
+        // Send confirmation email to artist
+        await sendArtistConfirmation(input.artistName, input.email, input.songTitle);
 
         return submission;
       }),
