@@ -147,4 +147,12 @@
 - [x] Update Navigation component with new logo
 - [x] Add "The Science of Sounds" tagline to hero section
 - [x] Update meta tags and page titles with tagline
-- [ ] Build production and push to GitHub
+- [x] Build production and push to GitHub
+
+## cPanel Deployment Fixes
+- [x] Create .htaccess file for SPA routing (fixes 404 on reload)
+- [x] Update DEPLOYMENT.md with correct Node.js app setup
+- [x] Add troubleshooting section for API connection issues
+- [ ] Create web.config for Windows/IIS servers (optional)
+- [ ] Test configuration files
+- [ ] Push fixes to both GitHub repositories
