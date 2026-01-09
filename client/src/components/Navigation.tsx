@@ -14,9 +14,12 @@ export function Navigation() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/">
-            <a className="flex items-center gap-3 text-xl font-bold text-foreground hover:text-primary transition-smooth">
-              <img src="/logo.png" alt="AE Music Lab" className="h-10 w-auto" />
-              <span>AE Music Lab</span>
+            <a className="flex items-center gap-3 hover:opacity-80 transition-smooth">
+              <img src="/logo.png" alt="AE Music Lab - The Science of Sounds" className="h-12 w-auto" />
+              <div className="flex flex-col">
+                <span className="text-xl font-bold text-foreground">AE Music Lab</span>
+                <span className="text-xs text-muted-foreground italic">The Science of Sounds</span>
+              </div>
             </a>
           </Link>
 

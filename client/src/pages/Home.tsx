@@ -61,9 +61,14 @@ export default function Home() {
               <span className="gradient-purple bg-clip-text text-transparent">The World's Best Producers</span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-              Find the perfect beat for your project
-            </p>
+            <div className="space-y-3">
+              <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
+                Find the perfect beat for your project
+              </p>
+              <p className="text-lg md:text-xl text-cyan-400 font-semibold italic">
+                The Science of Sounds
+              </p>
+            </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/beats">
