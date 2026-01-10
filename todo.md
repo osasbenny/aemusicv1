@@ -153,6 +153,23 @@
 - [x] Create .htaccess file for SPA routing (fixes 404 on reload)
 - [x] Update DEPLOYMENT.md with correct Node.js app setup
 - [x] Add troubleshooting section for API connection issues
-- [ ] Create web.config for Windows/IIS servers (optional)
-- [ ] Test configuration files
-- [ ] Push fixes to both GitHub repositories
+- [x] Create web.config for Windows/IIS servers (optional)
+- [x] Test configuration files
+- [x] Push fixes to both GitHub repositories
+
+## Standalone PHP Submission Form
+- [x] Create submit.php with form HTML and processing logic
+- [x] Implement file upload handling (MP3, WAV, MP4)
+- [x] Add email notification to cactusdigitalmedialtd@gmail.com
+- [x] Add confirmation email to artist
+- [x] Create success/error message display
+- [x] Add form validation and security measures
+- [x] Create config.php for email settings
+- [x] Write deployment instructions for PHP hosting
+- [x] Package files for easy upload
+
+## Add PHP Form to GitHub
+- [x] Copy PHP form files to main project
+- [x] Copy PHP form files to dist build
+- [ ] Commit and push to aemusiclab repository
+- [ ] Commit and push to aemusicv1 repository
