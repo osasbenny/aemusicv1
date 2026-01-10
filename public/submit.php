@@ -1,18 +1,153 @@
 <?php
 /**
  * AE Music Lab - Music Submission Form
- * Standalone PHP version for basic hosting
- * WITH DIAGNOSTIC MODE
+ * Standalone version - No external dependencies
+ * All configuration and functions embedded
  */
 
 // Enable error reporting for debugging
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
-require_once 'config.php';
-require_once 'functions.php';
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
 
-// Initialize variables
+define('SITE_NAME', 'AE Music Lab');
+define('ADMIN_EMAIL', 'cactusdigitalmedialtd@gmail.com');
+define('UPLOAD_DIR', __DIR__ . '/uploads');
+define('MAX_FILE_SIZE', 50 * 1024 * 1024); // 50MB
+define('ALLOWED_TYPES', ['audio/mpeg', 'audio/wav', 'audio/mp4', 'video/mp4', 'audio/x-m4a']);
+define('ALLOWED_EXTENSIONS', ['mp3', 'wav', 'mp4', 'm4a']);
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+function sanitize_input($data) {
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+    return $data;
+}
+
+function sanitize_email($email) {
+    return filter_var(trim($email), FILTER_SANITIZE_EMAIL);
+}
+
+function handle_file_upload($file) {
+    // Check for upload errors
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        $error_messages = [
+            UPLOAD_ERR_INI_SIZE => 'File exceeds server upload_max_filesize limit',
+            UPLOAD_ERR_FORM_SIZE => 'File exceeds MAX_FILE_SIZE directive',
+            UPLOAD_ERR_PARTIAL => 'File was only partially uploaded',
+            UPLOAD_ERR_NO_FILE => 'No file was uploaded',
+            UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary folder on server',
+            UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
+            UPLOAD_ERR_EXTENSION => 'File upload stopped by PHP extension',
+        ];
+        
+        $error_msg = $error_messages[$file['error']] ?? 'Unknown upload error';
+        return ['success' => false, 'error' => $error_msg];
+    }
+    
+    // Validate file size
+    if ($file['size'] > MAX_FILE_SIZE) {
+        $max_mb = MAX_FILE_SIZE / (1024 * 1024);
+        return ['success' => false, 'error' => "File size must be less than {$max_mb}MB"];
+    }
+    
+    // Validate file type
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mime_type = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+    
+    if (!in_array($mime_type, ALLOWED_TYPES)) {
+        return ['success' => false, 'error' => 'Invalid file type. Only MP3, WAV, and MP4 files are allowed'];
+    }
+    
+    // Validate file extension
+    $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if (!in_array($file_extension, ALLOWED_EXTENSIONS)) {
+        return ['success' => false, 'error' => 'Invalid file extension'];
+    }
+    
+    // Create uploads directory if it doesn't exist
+    if (!file_exists(UPLOAD_DIR)) {
+        if (!mkdir(UPLOAD_DIR, 0755, true)) {
+            return ['success' => false, 'error' => 'Failed to create uploads directory'];
+        }
+        
+        // Create .htaccess to prevent direct access
+        $htaccess_content = "Options -Indexes\n<FilesMatch \"\\.(mp3|wav|mp4|m4a)$\">\n    Order Allow,Deny\n    Deny from all\n</FilesMatch>";
+        file_put_contents(UPLOAD_DIR . '/.htaccess', $htaccess_content);
+    }
+    
+    // Generate unique filename
+    $unique_name = uniqid('track_', true) . '_' . time() . '.' . $file_extension;
+    $destination = UPLOAD_DIR . '/' . $unique_name;
+    
+    // Move uploaded file
+    if (!move_uploaded_file($file['tmp_name'], $destination)) {
+        return ['success' => false, 'error' => 'Failed to save uploaded file'];
+    }
+    
+    return [
+        'success' => true,
+        'file_path' => $destination,
+        'file_name' => $unique_name,
+        'original_name' => $file['name']
+    ];
+}
+
+function send_admin_notification($form_data, $file_name, $file_path) {
+    $to = ADMIN_EMAIL;
+    $subject = '🎵 New Music Submission - ' . SITE_NAME;
+    
+    $message = "New music submission received!\n\n";
+    $message .= "Artist Name: " . $form_data['artist_name'] . "\n";
+    $message .= "Email: " . $form_data['email'] . "\n";
+    $message .= "Song Title: " . $form_data['song_title'] . "\n";
+    $message .= "Message: " . ($form_data['message'] ?: 'No message provided') . "\n\n";
+    $message .= "File Name: " . $file_name . "\n";
+    $message .= "File Path: " . $file_path . "\n\n";
+    $message .= "Please review this submission and respond to the artist.\n";
+    
+    $headers = "From: noreply@aemusiclab.com\r\n";
+    $headers .= "Reply-To: " . $form_data['email'] . "\r\n";
+    $headers .= "X-Mailer: PHP/" . phpversion();
+    
+    return mail($to, $subject, $message, $headers);
+}
+
+function send_artist_confirmation($form_data) {
+    $to = $form_data['email'];
+    $subject = '🎵 Your Music Submission to ' . SITE_NAME . ' - Confirmed!';
+    
+    $message = "Hi " . $form_data['artist_name'] . ",\n\n";
+    $message .= "Thank you for submitting your track \"" . $form_data['song_title'] . "\" to " . SITE_NAME . "!\n\n";
+    $message .= "We've received your submission and our team will review it within 3-5 business days.\n\n";
+    $message .= "What happens next?\n";
+    $message .= "- Our team will evaluate your track for potential collaboration or feature opportunities\n";
+    $message .= "- You'll receive a follow-up email with our feedback and next steps\n";
+    $message .= "- In the meantime, feel free to browse our beat store at https://aemusiclab.com/beats\n\n";
+    $message .= "If you have any questions, reach out to us at " . ADMIN_EMAIL . "\n\n";
+    $message .= "Best regards,\n";
+    $message .= "The " . SITE_NAME . " Team\n";
+    $message .= "A Division of Armhen Entertainment\n";
+    
+    $headers = "From: " . SITE_NAME . " <noreply@aemusiclab.com>\r\n";
+    $headers .= "Reply-To: " . ADMIN_EMAIL . "\r\n";
+    $headers .= "X-Mailer: PHP/" . phpversion();
+    
+    return mail($to, $subject, $message, $headers);
+}
+
+// ============================================================================
+// MAIN PROCESSING
+// ============================================================================
+
 $success = false;
 $error = '';
 $diagnostics = [];
@@ -30,18 +165,18 @@ $diagnostics['post_max_size'] = ini_get('post_max_size');
 $diagnostics['max_execution_time'] = ini_get('max_execution_time');
 $diagnostics['memory_limit'] = ini_get('memory_limit');
 $diagnostics['uploads_dir_exists'] = file_exists(UPLOAD_DIR) ? 'Yes' : 'No';
-$diagnostics['uploads_dir_writable'] = is_writable(UPLOAD_DIR) ? 'Yes' : 'No';
+$diagnostics['uploads_dir_writable'] = is_writable(UPLOAD_DIR) ? 'Yes' : (file_exists(UPLOAD_DIR) ? 'No - Check permissions!' : 'Directory will be created');
 $diagnostics['uploads_dir_path'] = UPLOAD_DIR;
+$diagnostics['current_dir'] = __DIR__;
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Log POST data for debugging
     $diagnostics['post_received'] = 'Yes';
     $diagnostics['files_received'] = isset($_FILES['audio_file']) ? 'Yes' : 'No';
     
     if (isset($_FILES['audio_file'])) {
         $diagnostics['file_error_code'] = $_FILES['audio_file']['error'];
-        $diagnostics['file_size'] = $_FILES['audio_file']['size'];
+        $diagnostics['file_size'] = $_FILES['audio_file']['size'] . ' bytes (' . round($_FILES['audio_file']['size'] / (1024 * 1024), 2) . ' MB)';
         $diagnostics['file_name'] = $_FILES['audio_file']['name'];
         $diagnostics['file_type'] = $_FILES['audio_file']['type'];
         $diagnostics['file_tmp_name'] = $_FILES['audio_file']['tmp_name'];
@@ -61,54 +196,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (empty($_FILES['audio_file']['name'])) {
         $error = 'Please upload an audio file.';
     } else {
-        // Create upload directory if it doesn't exist
-        if (!file_exists(UPLOAD_DIR)) {
-            if (!mkdir(UPLOAD_DIR, 0755, true)) {
-                $error = 'Failed to create uploads directory. Please contact administrator.';
-                $diagnostics['mkdir_failed'] = 'Yes';
-            }
-        }
+        // Process file upload
+        $upload_result = handle_file_upload($_FILES['audio_file']);
         
-        if (empty($error)) {
-            // Process file upload
-            $upload_result = handle_file_upload($_FILES['audio_file']);
+        $diagnostics['upload_result'] = $upload_result;
+        
+        if ($upload_result['success']) {
+            $audio_file_path = $upload_result['file_path'];
+            $audio_file_name = $upload_result['file_name'];
             
-            $diagnostics['upload_result'] = $upload_result;
+            // Send admin notification
+            $admin_email_sent = send_admin_notification($form_data, $audio_file_name, $audio_file_path);
             
-            if ($upload_result['success']) {
-                $audio_file_path = $upload_result['file_path'];
-                $audio_file_name = $upload_result['file_name'];
-                
-                // Send admin notification
-                $admin_email_sent = send_admin_notification($form_data, $audio_file_name, $audio_file_path);
-                
-                // Send artist confirmation
-                $artist_email_sent = send_artist_confirmation($form_data);
-                
-                $diagnostics['admin_email_sent'] = $admin_email_sent ? 'Yes' : 'No';
-                $diagnostics['artist_email_sent'] = $artist_email_sent ? 'Yes' : 'No';
-                
-                if ($admin_email_sent && $artist_email_sent) {
-                    $success = true;
-                    // Clear form data on success
-                    $form_data = [
-                        'artist_name' => '',
-                        'email' => '',
-                        'song_title' => '',
-                        'message' => ''
-                    ];
-                } else {
-                    $error = 'Your submission was received but there was an issue sending confirmation emails. We will review your submission shortly.';
-                    $success = true; // Still show success since file was uploaded
-                }
-            } else {
-                $error = $upload_result['error'];
+            // Send artist confirmation
+            $artist_email_sent = send_artist_confirmation($form_data);
+            
+            $diagnostics['admin_email_sent'] = $admin_email_sent ? 'Yes' : 'No (mail() function may not be configured)';
+            $diagnostics['artist_email_sent'] = $artist_email_sent ? 'Yes' : 'No (mail() function may not be configured)';
+            
+            // Consider it success even if emails fail
+            $success = true;
+            
+            // Clear form data on success
+            $form_data = [
+                'artist_name' => '',
+                'email' => '',
+                'song_title' => '',
+                'message' => ''
+            ];
+            
+            if (!$admin_email_sent || !$artist_email_sent) {
+                $error = 'Your submission was received successfully! However, confirmation emails could not be sent. We will review your submission shortly.';
             }
+        } else {
+            $error = $upload_result['error'];
         }
     }
 }
 
-// Show diagnostics in development mode (remove in production)
+// Show diagnostics in development mode
 $show_diagnostics = isset($_GET['debug']) && $_GET['debug'] === 'true';
 ?>
 <!DOCTYPE html>
@@ -197,6 +323,12 @@ $show_diagnostics = isset($_GET['debug']) && $_GET['debug'] === 'true';
             color: #ef4444;
         }
         
+        .alert-warning {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid #fbbf24;
+            color: #fbbf24;
+        }
+        
         .alert-info {
             background: rgba(124, 92, 255, 0.1);
             border: 1px solid #7C5CFF;
@@ -211,7 +343,7 @@ $show_diagnostics = isset($_GET['debug']) && $_GET['debug'] === 'true';
             border-radius: 8px;
             font-family: monospace;
             font-size: 0.8rem;
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
         }
         
@@ -364,7 +496,6 @@ $show_diagnostics = isset($_GET['debug']) && $_GET['debug'] === 'true';
             color: #00F5D4;
         }
         
-        /* Upload Progress Bar */
         .progress-container {
             display: none;
             margin-top: 20px;
@@ -435,24 +566,26 @@ $show_diagnostics = isset($_GET['debug']) && $_GET['debug'] === 'true';
             <h2>Submit Your Music</h2>
             <p>Share your talent with us. Upload your track and we'll review it within 3-5 business days.</p>
             
-            <?php if ($success): ?>
+            <?php if ($success && empty($error)): ?>
                 <div class="alert alert-success">
                     <strong>Success!</strong> Your submission has been received. We'll review your track and get back to you within 3-5 business days. Check your email for confirmation.
                 </div>
-            <?php endif; ?>
-            
-            <?php if ($error): ?>
+            <?php elseif ($success && !empty($error)): ?>
+                <div class="alert alert-warning">
+                    <strong>Partial Success:</strong> <?php echo htmlspecialchars($error); ?>
+                </div>
+            <?php elseif ($error): ?>
                 <div class="alert alert-error">
                     <strong>Error:</strong> <?php echo htmlspecialchars($error); ?>
                 </div>
                 <div class="alert alert-info">
-                    <strong>Troubleshooting:</strong> If this error persists, please add <code>?debug=true</code> to the URL and screenshot the diagnostics section, then send it to cactusdigitalmedialtd@gmail.com
+                    <strong>Troubleshooting:</strong> Add <code>?debug=true</code> to the URL to see detailed diagnostics. Send screenshot to <?php echo ADMIN_EMAIL; ?>
                 </div>
             <?php endif; ?>
             
-            <?php if ($show_diagnostics && !empty($diagnostics)): ?>
+            <?php if ($show_diagnostics): ?>
                 <div class="diagnostics">
-                    <h3>Server Diagnostics</h3>
+                    <h3>📊 Server Diagnostics</h3>
                     <pre><?php echo htmlspecialchars(print_r($diagnostics, true)); ?></pre>
                 </div>
             <?php endif; ?>
@@ -482,7 +615,7 @@ $show_diagnostics = isset($_GET['debug']) && $_GET['debug'] === 'true';
                 <div class="form-group">
                     <label for="audio_file">Audio File <span class="required">*</span></label>
                     <div class="file-upload">
-                        <input type="file" id="audio_file" name="audio_file" accept=".mp3,.wav,.mp4" required>
+                        <input type="file" id="audio_file" name="audio_file" accept=".mp3,.wav,.mp4,.m4a" required>
                         <label for="audio_file" class="file-upload-label" id="fileUploadLabel">
                             <div class="file-upload-text">
                                 <div class="icon">🎵</div>
@@ -500,7 +633,6 @@ $show_diagnostics = isset($_GET['debug']) && $_GET['debug'] === 'true';
                               placeholder="Tell us about your track, your influences, or anything else you'd like us to know..."><?php echo htmlspecialchars($form_data['message']); ?></textarea>
                 </div>
                 
-                <!-- Upload Progress Bar -->
                 <div class="progress-container" id="progressContainer">
                     <div class="progress-label">Uploading your track...</div>
                     <div class="progress-bar-wrapper">
@@ -513,7 +645,7 @@ $show_diagnostics = isset($_GET['debug']) && $_GET['debug'] === 'true';
                 <button type="submit" class="btn" id="submitBtn">Submit Your Track</button>
                 
                 <div class="disclaimer">
-                    <strong>Submission Terms:</strong> By submitting your music, you confirm that you own all rights to the submitted material and grant AE Music Lab permission to review and potentially feature your work. We respect your intellectual property and will not use your music without your explicit consent.
+                    <strong>Submission Terms:</strong> By submitting your music, you confirm that you own all rights to the submitted material and grant <?php echo SITE_NAME; ?> permission to review and potentially feature your work. We respect your intellectual property and will not use your music without your explicit consent.
                 </div>
             </form>
         </div>
@@ -525,7 +657,6 @@ $show_diagnostics = isset($_GET['debug']) && $_GET['debug'] === 'true';
     </div>
     
     <script>
-        // File upload preview
         const fileInput = document.getElementById('audio_file');
         const fileNameDisplay = document.getElementById('fileName');
         const fileUploadLabel = document.getElementById('fileUploadLabel');
@@ -544,7 +675,6 @@ $show_diagnostics = isset($_GET['debug']) && $_GET['debug'] === 'true';
             }
         });
         
-        // Form submission with progress tracking
         const form = document.getElementById('submitForm');
         const submitBtn = document.getElementById('submitBtn');
         const progressContainer = document.getElementById('progressContainer');
@@ -555,14 +685,12 @@ $show_diagnostics = isset($_GET['debug']) && $_GET['debug'] === 'true';
         form.addEventListener('submit', function(e) {
             const file = fileInput.files[0];
             
-            // Validate file
             if (!file) {
                 alert('Please select a file to upload');
                 e.preventDefault();
                 return false;
             }
             
-            // Get max file size from PHP config (convert to bytes)
             const maxSizeStr = '<?php echo ini_get("upload_max_filesize"); ?>';
             const maxSizeMB = parseInt(maxSizeStr);
             const maxSizeBytes = maxSizeMB * 1024 * 1024;
@@ -573,29 +701,22 @@ $show_diagnostics = isset($_GET['debug']) && $_GET['debug'] === 'true';
                 return false;
             }
             
-            // Prevent default and use AJAX with progress
             e.preventDefault();
             
-            // Show progress bar
             progressContainer.classList.add('active');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Uploading...';
             uploadingStatus.textContent = 'Preparing upload...';
             
-            // Create FormData
             const formData = new FormData(form);
-            
-            // Create XMLHttpRequest for progress tracking
             const xhr = new XMLHttpRequest();
             
-            // Track upload progress
             xhr.upload.addEventListener('progress', function(e) {
                 if (e.lengthComputable) {
                     const percentComplete = Math.round((e.loaded / e.total) * 100);
                     progressBar.style.width = percentComplete + '%';
                     progressText.textContent = percentComplete + '%';
                     
-                    // Update status message
                     if (percentComplete < 100) {
                         const mbLoaded = (e.loaded / (1024 * 1024)).toFixed(1);
                         const mbTotal = (e.total / (1024 * 1024)).toFixed(1);
@@ -606,19 +727,16 @@ $show_diagnostics = isset($_GET['debug']) && $_GET['debug'] === 'true';
                 }
             });
             
-            // Handle completion
             xhr.addEventListener('load', function() {
                 progressBar.style.width = '100%';
                 progressText.textContent = '100%';
                 uploadingStatus.textContent = 'Upload complete! Redirecting...';
                 
-                // Wait a moment then reload to show result
                 setTimeout(function() {
                     window.location.reload();
                 }, 1000);
             });
             
-            // Handle errors
             xhr.addEventListener('error', function() {
                 alert('Upload failed. Please check your connection and try again.');
                 progressContainer.classList.remove('active');
@@ -628,7 +746,6 @@ $show_diagnostics = isset($_GET['debug']) && $_GET['debug'] === 'true';
                 progressText.textContent = '0%';
             });
             
-            // Handle timeout
             xhr.addEventListener('timeout', function() {
                 alert('Upload timed out. Please try again with a smaller file or check your connection.');
                 progressContainer.classList.remove('active');
@@ -638,10 +755,7 @@ $show_diagnostics = isset($_GET['debug']) && $_GET['debug'] === 'true';
                 progressText.textContent = '0%';
             });
             
-            // Set timeout (5 minutes for large files)
             xhr.timeout = 300000;
-            
-            // Send the request
             xhr.open('POST', window.location.href, true);
             xhr.send(formData);
         });
