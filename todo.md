@@ -178,3 +178,7 @@
 - [x] Create comprehensive Render deployment guide
 - [x] Document environment variables setup
 - [x] Add domain configuration instructions
+
+## Update Links to PHP Form
+- [x] Update all "Submit Your Music" links to point to https://aemusiclab.com/submit.php
+- [x] Add upload progress bar (0% to 100%) to PHP submission form

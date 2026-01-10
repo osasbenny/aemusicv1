@@ -288,6 +288,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .footer a:hover {
             color: #00F5D4;
         }
+        
+        /* Upload Progress Bar */
+        .progress-container {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .progress-container.active {
+            display: block;
+        }
+        
+        .progress-bar-wrapper {
+            width: 100%;
+            height: 30px;
+            background: #0B0E14;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid rgba(124, 92, 255, 0.2);
+            position: relative;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #7C5CFF 0%, #00F5D4 100%);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #ffffff;
+            z-index: 2;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        .progress-label {
+            margin-bottom: 10px;
+            color: #00F5D4;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -356,7 +405,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                               placeholder="Tell us about your track, your influences, or anything else you'd like us to know..."><?php echo htmlspecialchars($form_data['message']); ?></textarea>
                 </div>
                 
-                <button type="submit" class="btn">Submit Your Track</button>
+                <button type="submit" class="btn" id="submitBtn">Submit Your Track</button>
+                
+                <!-- Upload Progress Bar -->
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-label">Uploading your track...</div>
+                    <div class="progress-bar-wrapper">
+                        <div class="progress-bar" id="progressBar"></div>
+                        <div class="progress-text" id="progressText">0%</div>
+                    </div>
+                </div>
                 
                 <div class="disclaimer">
                     <strong>Submission Terms:</strong> By submitting your music, you confirm that you own all rights to the submitted material and grant AE Music Lab permission to review and potentially feature your work. We respect your intellectual property and will not use your music without your explicit consent.
@@ -382,7 +440,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         });
         
-        // Form validation
+        // Form submission with progress tracking
         document.getElementById('submitForm').addEventListener('submit', function(e) {
             const fileInput = document.getElementById('audio_file');
             const file = fileInput.files[0];
@@ -395,6 +453,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     return false;
                 }
             }
+            
+            // Prevent default form submission
+            e.preventDefault();
+            
+            // Get form data
+            const formData = new FormData(this);
+            
+            // Show progress bar
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            progressContainer.classList.add('active');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Uploading...';
+            
+            // Create XMLHttpRequest for progress tracking
+            const xhr = new XMLHttpRequest();
+            
+            // Track upload progress
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = Math.round((e.loaded / e.total) * 100);
+                    progressBar.style.width = percentComplete + '%';
+                    progressText.textContent = percentComplete + '%';
+                }
+            });
+            
+            // Handle completion
+            xhr.addEventListener('load', function() {
+                if (xhr.status === 200) {
+                    // Success - reload page to show success message
+                    progressBar.style.width = '100%';
+                    progressText.textContent = '100%';
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    // Error
+                    alert('Upload failed. Please try again.');
+                    progressContainer.classList.remove('active');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Your Track';
+                }
+            });
+            
+            // Handle errors
+            xhr.addEventListener('error', function() {
+                alert('Upload failed. Please check your connection and try again.');
+                progressContainer.classList.remove('active');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Your Track';
+            });
+            
+            // Send the request
+            xhr.open('POST', window.location.href, true);
+            xhr.send(formData);
         });
     </script>
 </body>

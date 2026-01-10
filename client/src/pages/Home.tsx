@@ -77,12 +77,12 @@ export default function Home() {
                   Explore Beats
                 </Button>
               </Link>
-              <Link href="/submit">
+              <a href="https://aemusiclab.com/submit.php" target="_blank" rel="noopener noreferrer">
                 <Button size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600">
                   <Upload className="w-5 h-5 mr-2" />
                   Sell Your Beats
                 </Button>
-              </Link>
+              </a>
             </div>
 
             {/* Media Mentions */}
@@ -174,11 +174,11 @@ export default function Home() {
               </div>
 
               <div className="flex gap-4 pt-4">
-                <Link href="/submit">
+                <a href="https://aemusiclab.com/submit.php" target="_blank" rel="noopener noreferrer">
                   <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
                     Sell Your Beats
                   </Button>
-                </Link>
+                </a>
                 <Link href="/about">
                   <Button size="lg" variant="outline">
                     Learn More
@@ -378,11 +378,11 @@ export default function Home() {
                     Browse Beats
                   </Button>
                 </Link>
-                <Link href="/submit">
+                <a href="https://aemusiclab.com/submit.php" target="_blank" rel="noopener noreferrer">
                   <Button size="lg" variant="outline" className="text-lg px-8 border-white text-white hover:bg-white hover:text-purple-600">
                     Submit Your Music
                   </Button>
-                </Link>
+                </a>
               </div>
             </motion.div>
           </Card>

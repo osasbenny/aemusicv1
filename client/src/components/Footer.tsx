@@ -42,11 +42,9 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/submit">
-                  <a className="text-muted-foreground hover:text-primary transition-smooth">
-                    Submit Music
-                  </a>
-                </Link>
+                <a href="https://aemusiclab.com/submit.php" className="text-muted-foreground hover:text-primary transition-smooth" target="_blank" rel="noopener noreferrer">
+                  Submit Music
+                </a>
               </li>
               <li>
                 <Link href="/about">

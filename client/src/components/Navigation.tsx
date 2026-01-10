@@ -31,9 +31,7 @@ export function Navigation() {
             <Link href="/beats">
               <a className="text-foreground hover:text-primary transition-smooth">Beats</a>
             </Link>
-            <Link href="/submit">
-              <a className="text-foreground hover:text-primary transition-smooth">Submit Music</a>
-            </Link>
+            <a href="https://aemusiclab.com/submit.php" className="text-foreground hover:text-primary transition-smooth" target="_blank" rel="noopener noreferrer">Submit Music</a>
             <Link href="/about">
               <a className="text-foreground hover:text-primary transition-smooth">About</a>
             </Link>
@@ -76,14 +74,15 @@ export function Navigation() {
                 Beats
               </a>
             </Link>
-            <Link href="/submit">
-              <a
-                className="block text-foreground hover:text-primary transition-smooth"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Submit Music
-              </a>
-            </Link>
+            <a
+              href="https://aemusiclab.com/submit.php"
+              className="block text-foreground hover:text-primary transition-smooth"
+              onClick={() => setMobileMenuOpen(false)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Submit Music
+            </a>
             <Link href="/about">
               <a
                 className="block text-foreground hover:text-primary transition-smooth"
