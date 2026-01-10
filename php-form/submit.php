@@ -252,13 +252,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transition: transform 0.2s, box-shadow 0.2s;
         }
         
-        .btn:hover {
+        .btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(124, 92, 255, 0.4);
         }
         
         .btn:disabled {
-            opacity: 0.5;
+            opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
@@ -293,6 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .progress-container {
             display: none;
             margin-top: 20px;
+            margin-bottom: 20px;
         }
         
         .progress-container.active {
@@ -301,11 +302,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         .progress-bar-wrapper {
             width: 100%;
-            height: 30px;
+            height: 40px;
             background: #0B0E14;
-            border-radius: 15px;
+            border-radius: 20px;
             overflow: hidden;
-            border: 1px solid rgba(124, 92, 255, 0.2);
+            border: 2px solid rgba(124, 92, 255, 0.3);
             position: relative;
         }
         
@@ -324,18 +325,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             position: absolute;
             width: 100%;
             text-align: center;
-            font-weight: 600;
-            font-size: 0.85rem;
+            font-weight: 700;
+            font-size: 1rem;
             color: #ffffff;
             z-index: 2;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+            line-height: 40px;
         }
         
         .progress-label {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             color: #00F5D4;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .uploading-status {
+            text-align: center;
+            color: #A1A1AA;
             font-size: 0.9rem;
-            font-weight: 500;
+            margin-top: 8px;
         }
     </style>
 </head>
@@ -388,7 +398,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label for="audio_file">Audio File <span class="required">*</span></label>
                     <div class="file-upload">
                         <input type="file" id="audio_file" name="audio_file" accept=".mp3,.wav,.mp4" required>
-                        <label for="audio_file" class="file-upload-label">
+                        <label for="audio_file" class="file-upload-label" id="fileUploadLabel">
                             <div class="file-upload-text">
                                 <div class="icon">🎵</div>
                                 <div>Click to upload or drag and drop</div>
@@ -405,8 +415,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                               placeholder="Tell us about your track, your influences, or anything else you'd like us to know..."><?php echo htmlspecialchars($form_data['message']); ?></textarea>
                 </div>
                 
-                <button type="submit" class="btn" id="submitBtn">Submit Your Track</button>
-                
                 <!-- Upload Progress Bar -->
                 <div class="progress-container" id="progressContainer">
                     <div class="progress-label">Uploading your track...</div>
@@ -414,7 +422,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="progress-bar" id="progressBar"></div>
                         <div class="progress-text" id="progressText">0%</div>
                     </div>
+                    <div class="uploading-status" id="uploadingStatus">Preparing upload...</div>
                 </div>
+                
+                <button type="submit" class="btn" id="submitBtn">Submit Your Track</button>
                 
                 <div class="disclaimer">
                     <strong>Submission Terms:</strong> By submitting your music, you confirm that you own all rights to the submitted material and grant AE Music Lab permission to review and potentially feature your work. We respect your intellectual property and will not use your music without your explicit consent.
@@ -430,45 +441,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     <script>
         // File upload preview
-        document.getElementById('audio_file').addEventListener('change', function(e) {
+        const fileInput = document.getElementById('audio_file');
+        const fileNameDisplay = document.getElementById('fileName');
+        const fileUploadLabel = document.getElementById('fileUploadLabel');
+        
+        fileInput.addEventListener('change', function(e) {
             const fileName = e.target.files[0]?.name;
-            const fileNameDisplay = document.getElementById('fileName');
             if (fileName) {
                 fileNameDisplay.textContent = '📎 ' + fileName;
+                fileUploadLabel.style.borderColor = '#7C5CFF';
+                fileUploadLabel.style.background = 'rgba(124, 92, 255, 0.1)';
             } else {
                 fileNameDisplay.textContent = '';
+                fileUploadLabel.style.borderColor = 'rgba(124, 92, 255, 0.3)';
+                fileUploadLabel.style.background = '#0B0E14';
             }
         });
         
         // Form submission with progress tracking
-        document.getElementById('submitForm').addEventListener('submit', function(e) {
-            const fileInput = document.getElementById('audio_file');
+        const form = document.getElementById('submitForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const uploadingStatus = document.getElementById('uploadingStatus');
+        
+        form.addEventListener('submit', function(e) {
             const file = fileInput.files[0];
             
-            if (file) {
-                const maxSize = <?php echo MAX_FILE_SIZE; ?>;
-                if (file.size > maxSize) {
-                    e.preventDefault();
-                    alert('File size must be less than 50MB');
-                    return false;
-                }
+            // Validate file
+            if (!file) {
+                alert('Please select a file to upload');
+                e.preventDefault();
+                return false;
             }
             
-            // Prevent default form submission
+            // Check file size
+            const maxSize = <?php echo MAX_FILE_SIZE; ?>;
+            if (file.size > maxSize) {
+                alert('File size must be less than 50MB');
+                e.preventDefault();
+                return false;
+            }
+            
+            // Prevent default and use AJAX with progress
             e.preventDefault();
             
-            // Get form data
-            const formData = new FormData(this);
-            
             // Show progress bar
-            const progressContainer = document.getElementById('progressContainer');
-            const progressBar = document.getElementById('progressBar');
-            const progressText = document.getElementById('progressText');
-            const submitBtn = document.getElementById('submitBtn');
-            
             progressContainer.classList.add('active');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Uploading...';
+            uploadingStatus.textContent = 'Preparing upload...';
+            
+            // Create FormData
+            const formData = new FormData(form);
             
             // Create XMLHttpRequest for progress tracking
             const xhr = new XMLHttpRequest();
@@ -479,25 +505,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     const percentComplete = Math.round((e.loaded / e.total) * 100);
                     progressBar.style.width = percentComplete + '%';
                     progressText.textContent = percentComplete + '%';
+                    
+                    // Update status message
+                    if (percentComplete < 100) {
+                        const mbLoaded = (e.loaded / (1024 * 1024)).toFixed(1);
+                        const mbTotal = (e.total / (1024 * 1024)).toFixed(1);
+                        uploadingStatus.textContent = `Uploading: ${mbLoaded}MB / ${mbTotal}MB`;
+                    } else {
+                        uploadingStatus.textContent = 'Processing your submission...';
+                    }
                 }
             });
             
             // Handle completion
             xhr.addEventListener('load', function() {
-                if (xhr.status === 200) {
-                    // Success - reload page to show success message
-                    progressBar.style.width = '100%';
-                    progressText.textContent = '100%';
-                    setTimeout(function() {
-                        window.location.reload();
-                    }, 500);
-                } else {
-                    // Error
-                    alert('Upload failed. Please try again.');
-                    progressContainer.classList.remove('active');
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Submit Your Track';
-                }
+                progressBar.style.width = '100%';
+                progressText.textContent = '100%';
+                uploadingStatus.textContent = 'Upload complete! Redirecting...';
+                
+                // Wait a moment then reload to show result
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1000);
             });
             
             // Handle errors
@@ -506,7 +535,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 progressContainer.classList.remove('active');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Submit Your Track';
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
             });
+            
+            // Handle timeout
+            xhr.addEventListener('timeout', function() {
+                alert('Upload timed out. Please try again with a smaller file or check your connection.');
+                progressContainer.classList.remove('active');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Your Track';
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+            });
+            
+            // Set timeout (5 minutes for large files)
+            xhr.timeout = 300000;
             
             // Send the request
             xhr.open('POST', window.location.href, true);
