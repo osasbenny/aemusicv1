@@ -2,7 +2,12 @@
 /**
  * AE Music Lab - Music Submission Form
  * Standalone PHP version for basic hosting
+ * WITH DIAGNOSTIC MODE
  */
+
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
 
 require_once 'config.php';
 require_once 'functions.php';
@@ -10,6 +15,7 @@ require_once 'functions.php';
 // Initialize variables
 $success = false;
 $error = '';
+$diagnostics = [];
 $form_data = [
     'artist_name' => '',
     'email' => '',
@@ -17,8 +23,30 @@ $form_data = [
     'message' => ''
 ];
 
+// Collect server diagnostics
+$diagnostics['php_version'] = phpversion();
+$diagnostics['upload_max_filesize'] = ini_get('upload_max_filesize');
+$diagnostics['post_max_size'] = ini_get('post_max_size');
+$diagnostics['max_execution_time'] = ini_get('max_execution_time');
+$diagnostics['memory_limit'] = ini_get('memory_limit');
+$diagnostics['uploads_dir_exists'] = file_exists(UPLOAD_DIR) ? 'Yes' : 'No';
+$diagnostics['uploads_dir_writable'] = is_writable(UPLOAD_DIR) ? 'Yes' : 'No';
+$diagnostics['uploads_dir_path'] = UPLOAD_DIR;
+
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Log POST data for debugging
+    $diagnostics['post_received'] = 'Yes';
+    $diagnostics['files_received'] = isset($_FILES['audio_file']) ? 'Yes' : 'No';
+    
+    if (isset($_FILES['audio_file'])) {
+        $diagnostics['file_error_code'] = $_FILES['audio_file']['error'];
+        $diagnostics['file_size'] = $_FILES['audio_file']['size'];
+        $diagnostics['file_name'] = $_FILES['audio_file']['name'];
+        $diagnostics['file_type'] = $_FILES['audio_file']['type'];
+        $diagnostics['file_tmp_name'] = $_FILES['audio_file']['tmp_name'];
+    }
+    
     // Validate and sanitize input
     $form_data['artist_name'] = sanitize_input($_POST['artist_name'] ?? '');
     $form_data['email'] = sanitize_email($_POST['email'] ?? '');
@@ -33,37 +61,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (empty($_FILES['audio_file']['name'])) {
         $error = 'Please upload an audio file.';
     } else {
-        // Process file upload
-        $upload_result = handle_file_upload($_FILES['audio_file']);
-        
-        if ($upload_result['success']) {
-            $audio_file_path = $upload_result['file_path'];
-            $audio_file_name = $upload_result['file_name'];
-            
-            // Send admin notification
-            $admin_email_sent = send_admin_notification($form_data, $audio_file_name, $audio_file_path);
-            
-            // Send artist confirmation
-            $artist_email_sent = send_artist_confirmation($form_data);
-            
-            if ($admin_email_sent && $artist_email_sent) {
-                $success = true;
-                // Clear form data on success
-                $form_data = [
-                    'artist_name' => '',
-                    'email' => '',
-                    'song_title' => '',
-                    'message' => ''
-                ];
-            } else {
-                $error = 'Your submission was received but there was an issue sending confirmation emails. We will review your submission shortly.';
-                $success = true; // Still show success since file was uploaded
+        // Create upload directory if it doesn't exist
+        if (!file_exists(UPLOAD_DIR)) {
+            if (!mkdir(UPLOAD_DIR, 0755, true)) {
+                $error = 'Failed to create uploads directory. Please contact administrator.';
+                $diagnostics['mkdir_failed'] = 'Yes';
             }
-        } else {
-            $error = $upload_result['error'];
+        }
+        
+        if (empty($error)) {
+            // Process file upload
+            $upload_result = handle_file_upload($_FILES['audio_file']);
+            
+            $diagnostics['upload_result'] = $upload_result;
+            
+            if ($upload_result['success']) {
+                $audio_file_path = $upload_result['file_path'];
+                $audio_file_name = $upload_result['file_name'];
+                
+                // Send admin notification
+                $admin_email_sent = send_admin_notification($form_data, $audio_file_name, $audio_file_path);
+                
+                // Send artist confirmation
+                $artist_email_sent = send_artist_confirmation($form_data);
+                
+                $diagnostics['admin_email_sent'] = $admin_email_sent ? 'Yes' : 'No';
+                $diagnostics['artist_email_sent'] = $artist_email_sent ? 'Yes' : 'No';
+                
+                if ($admin_email_sent && $artist_email_sent) {
+                    $success = true;
+                    // Clear form data on success
+                    $form_data = [
+                        'artist_name' => '',
+                        'email' => '',
+                        'song_title' => '',
+                        'message' => ''
+                    ];
+                } else {
+                    $error = 'Your submission was received but there was an issue sending confirmation emails. We will review your submission shortly.';
+                    $success = true; // Still show success since file was uploaded
+                }
+            } else {
+                $error = $upload_result['error'];
+            }
         }
     }
 }
+
+// Show diagnostics in development mode (remove in production)
+$show_diagnostics = isset($_GET['debug']) && $_GET['debug'] === 'true';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -149,6 +195,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: rgba(239, 68, 68, 0.1);
             border: 1px solid #ef4444;
             color: #ef4444;
+        }
+        
+        .alert-info {
+            background: rgba(124, 92, 255, 0.1);
+            border: 1px solid #7C5CFF;
+            color: #A1A1AA;
+            font-size: 0.85rem;
+        }
+        
+        .diagnostics {
+            margin-top: 20px;
+            padding: 16px;
+            background: #0B0E14;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .diagnostics h3 {
+            color: #7C5CFF;
+            margin-bottom: 10px;
+        }
+        
+        .diagnostics pre {
+            color: #00F5D4;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
         
         .form-group {
@@ -370,6 +445,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="alert alert-error">
                     <strong>Error:</strong> <?php echo htmlspecialchars($error); ?>
                 </div>
+                <div class="alert alert-info">
+                    <strong>Troubleshooting:</strong> If this error persists, please add <code>?debug=true</code> to the URL and screenshot the diagnostics section, then send it to cactusdigitalmedialtd@gmail.com
+                </div>
+            <?php endif; ?>
+            
+            <?php if ($show_diagnostics && !empty($diagnostics)): ?>
+                <div class="diagnostics">
+                    <h3>Server Diagnostics</h3>
+                    <pre><?php echo htmlspecialchars(print_r($diagnostics, true)); ?></pre>
+                </div>
             <?php endif; ?>
             
             <form method="POST" enctype="multipart/form-data" id="submitForm">
@@ -402,7 +487,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="file-upload-text">
                                 <div class="icon">🎵</div>
                                 <div>Click to upload or drag and drop</div>
-                                <div class="file-info">MP3, WAV, or MP4 (Max 50MB)</div>
+                                <div class="file-info">MP3, WAV, or MP4 (Max <?php echo ini_get('upload_max_filesize'); ?>)</div>
                             </div>
                         </label>
                         <div class="file-name" id="fileName"></div>
@@ -446,9 +531,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const fileUploadLabel = document.getElementById('fileUploadLabel');
         
         fileInput.addEventListener('change', function(e) {
-            const fileName = e.target.files[0]?.name;
-            if (fileName) {
-                fileNameDisplay.textContent = '📎 ' + fileName;
+            const file = e.target.files[0];
+            if (file) {
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                fileNameDisplay.textContent = `📎 ${file.name} (${sizeMB} MB)`;
                 fileUploadLabel.style.borderColor = '#7C5CFF';
                 fileUploadLabel.style.background = 'rgba(124, 92, 255, 0.1)';
             } else {
@@ -476,10 +562,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 return false;
             }
             
-            // Check file size
-            const maxSize = <?php echo MAX_FILE_SIZE; ?>;
-            if (file.size > maxSize) {
-                alert('File size must be less than 50MB');
+            // Get max file size from PHP config (convert to bytes)
+            const maxSizeStr = '<?php echo ini_get("upload_max_filesize"); ?>';
+            const maxSizeMB = parseInt(maxSizeStr);
+            const maxSizeBytes = maxSizeMB * 1024 * 1024;
+            
+            if (file.size > maxSizeBytes) {
+                alert(`File size must be less than ${maxSizeStr}`);
                 e.preventDefault();
                 return false;
             }
