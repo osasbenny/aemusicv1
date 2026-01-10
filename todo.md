@@ -188,3 +188,11 @@
 - [x] Fix "File upload error. Please try again." error on form submission
 - [x] Ensure progress bar displays 0% to 100% during upload
 - [x] Test file upload with large files on cPanel deployment
+
+## PHP Form Upload Error Investigation
+- [x] Fix persistent "File upload error. Please try again." on cPanel
+- [x] Add detailed error logging to diagnose upload issues
+- [x] Check PHP upload_max_filesize and post_max_size settings
+- [x] Verify uploads directory permissions (755 or 777)
+- [x] Add server configuration diagnostics to form
+- [x] Document contact form email recipient address (currently just UI placeholder - no emails sent)
