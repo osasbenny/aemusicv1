@@ -202,3 +202,9 @@
 - [x] Embed all configuration and functions directly in submit.php
 - [x] Test form submission with progress bar
 - [x] Ensure uploads directory is created automatically with proper permissions
+
+## SMTP Email Integration
+- [x] Download PHPMailer library for SMTP support
+- [x] Create submit.php version with SMTP email functionality
+- [x] Add SMTP configuration instructions for cPanel
+- [ ] Test email sending with SMTP credentials (requires user's SMTP settings)
