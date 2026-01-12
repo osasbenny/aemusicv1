@@ -96,15 +96,15 @@ export function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2 text-muted-foreground">
                 <Mail className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>info@aemusiclab.com</span>
+                <span>Info@aemusiclab.com</span>
               </li>
               <li className="flex items-start gap-2 text-muted-foreground">
                 <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>+234 (0) 123 456 7890</span>
+                <span>+27 69 923 0893</span>
               </li>
               <li className="flex items-start gap-2 text-muted-foreground">
                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>Lagos, Nigeria</span>
+                <span>19 Loop Street, Cape Town City Centre, Cape Town, South Africa</span>
               </li>
             </ul>
           </div>

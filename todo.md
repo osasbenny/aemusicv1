@@ -224,3 +224,8 @@
 - [x] Create netlify.toml to skip build and serve pre-built files
 - [x] Configure public folder as publish directory
 - [ ] Test Netlify deployment with new configuration
+
+## Contact Information Update
+- [x] Update address to: 19 loop street, Cape Town City Centre, Cape Town, South Africa
+- [x] Update phone to: +27699230893
+- [x] Update email to: Info@aemusiclab.com
