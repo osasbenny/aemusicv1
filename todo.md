@@ -219,3 +219,8 @@
 - [x] Add "Preview" button to each beat card
 - [x] Add "Collaborate" button to each beat card
 - [x] Implement functionality for each button (modals, actions, or redirects)
+
+## Netlify Configuration
+- [x] Create netlify.toml to skip build and serve pre-built files
+- [x] Configure public folder as publish directory
+- [ ] Test Netlify deployment with new configuration
