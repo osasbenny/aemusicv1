@@ -173,9 +173,25 @@ export default function Beats() {
                   )}
 
                   <div className="mb-4">
-                    <audio id={`audio-${beat.id}`} controls className="w-full h-10">
+                    <audio 
+                      id={`audio-${beat.id}`} 
+                      controls 
+                      className="w-full h-10"
+                      onLoadedMetadata={(e) => {
+                        const audio = e.currentTarget;
+                        // Limit preview to 30 seconds
+                        audio.addEventListener('timeupdate', function(this: HTMLAudioElement) {
+                          if (this.currentTime >= 30) {
+                            this.pause();
+                            this.currentTime = 0;
+                            toast.info("Preview limited to 30 seconds. Purchase or collaborate to hear the full beat!");
+                          }
+                        });
+                      }}
+                    >
                       <source src={beat.audioUrl} type="audio/mpeg" />
                     </audio>
+                    <p className="text-xs text-muted-foreground mt-1 text-center">30-second preview</p>
                   </div>
 
                   <div className="flex flex-col gap-3">
@@ -220,8 +236,8 @@ export default function Beats() {
                         size="sm"
                         className="w-full"
                         onClick={() => {
-                          toast.success("Redirecting to collaboration inquiry...");
-                          window.location.href = `/contact?beat=${encodeURIComponent(beat.title)}&type=collaborate`;
+                          toast.success("Redirecting to collaboration form...");
+                          window.open(`https://aemusiclab.com/collaborate.php?beat=${encodeURIComponent(beat.title)}`, '_blank');
                         }}
                       >
                         <Handshake className="w-4 h-4 mr-1" />

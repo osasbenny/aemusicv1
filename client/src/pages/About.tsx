@@ -122,7 +122,7 @@ export default function About() {
                 </a>
                 <a href="https://aemusiclab.com/submit.php" className="inline-block" target="_blank" rel="noopener noreferrer">
                   <button className="px-8 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:opacity-90 transition-smooth">
-                    Submit Your Music
+                    Collaborate
                   </button>
                 </a>
               </div>

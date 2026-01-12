@@ -43,7 +43,7 @@ export function Footer() {
               </li>
               <li>
                 <a href="https://aemusiclab.com/submit.php" className="text-muted-foreground hover:text-primary transition-smooth" target="_blank" rel="noopener noreferrer">
-                  Submit Music
+                  Collaborate
                 </a>
               </li>
               <li>

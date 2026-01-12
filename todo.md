@@ -229,3 +229,25 @@
 - [x] Update address to: 19 loop street, Cape Town City Centre, Cape Town, South Africa
 - [x] Update phone to: +27699230893
 - [x] Update email to: Info@aemusiclab.com
+
+## Collaboration Feature Rebrand
+- [x] Change "Sell Your Beats" button to "Collaborate"
+- [x] Change "Submit Music" / "Submit Your Music" to "Collaborate"
+- [x] Update navigation menu links
+- [x] Update footer links
+- [x] Update home page CTAs
+
+## Beat Store Enhancements
+- [x] Limit audio preview to 30 seconds (snippet only)
+- [x] Add "Purchase Beat" button to each beat card
+- [x] Add "Collaborate" button to each beat card
+- [x] Link Collaborate button to external PHP form
+
+## Voice Recording Upload Feature
+- [x] Create collaboration form (collaborate.php) with file upload
+- [x] Add file upload option for pre-recorded vocals
+- [x] Send voice recordings to info@aemusiclab.com via SMTP
+- [x] Include beat details in email (beat name, artist, contact info)
+- [x] Add success/error notifications for uploads
+- [x] Create PHP handler (collaborate-handler.php) with progress tracking
+- [x] Send confirmation email to artists after submission

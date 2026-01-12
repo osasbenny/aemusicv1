@@ -31,7 +31,7 @@ export function Navigation() {
             <Link href="/beats">
               <a className="text-foreground hover:text-primary transition-smooth">Beats</a>
             </Link>
-            <a href="https://aemusiclab.com/submit.php" className="text-foreground hover:text-primary transition-smooth" target="_blank" rel="noopener noreferrer">Submit Music</a>
+            <a href="https://aemusiclab.com/submit.php" className="text-foreground hover:text-primary transition-smooth" target="_blank" rel="noopener noreferrer">Collaborate</a>
             <Link href="/about">
               <a className="text-foreground hover:text-primary transition-smooth">About</a>
             </Link>
@@ -81,7 +81,7 @@ export function Navigation() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Submit Music
+              Collaborate
             </a>
             <Link href="/about">
               <a

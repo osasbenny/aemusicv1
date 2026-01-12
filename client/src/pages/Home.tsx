@@ -80,7 +80,7 @@ export default function Home() {
               <a href="https://aemusiclab.com/submit.php" target="_blank" rel="noopener noreferrer">
                 <Button size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600">
                   <Upload className="w-5 h-5 mr-2" />
-                  Sell Your Beats
+                  Collaborate
                 </Button>
               </a>
             </div>
@@ -176,7 +176,7 @@ export default function Home() {
               <div className="flex gap-4 pt-4">
                 <a href="https://aemusiclab.com/submit.php" target="_blank" rel="noopener noreferrer">
                   <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                    Sell Your Beats
+                    Collaborate
                   </Button>
                 </a>
                 <Link href="/about">
@@ -380,7 +380,7 @@ export default function Home() {
                 </Link>
                 <a href="https://aemusiclab.com/submit.php" target="_blank" rel="noopener noreferrer">
                   <Button size="lg" variant="outline" className="text-lg px-8 border-white text-white hover:bg-white hover:text-purple-600">
-                    Submit Your Music
+                    Collaborate
                   </Button>
                 </a>
               </div>
