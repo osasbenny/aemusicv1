@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Music, ShoppingCart } from "lucide-react";
+import { Music, ShoppingCart, Play, Handshake } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -173,21 +173,61 @@ export default function Beats() {
                   )}
 
                   <div className="mb-4">
-                    <audio controls className="w-full h-10">
+                    <audio id={`audio-${beat.id}`} controls className="w-full h-10">
                       <source src={beat.audioUrl} type="audio/mpeg" />
                     </audio>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-primary">${(beat.price / 100).toFixed(2)}</span>
-                    <Button
-                      onClick={() => handlePurchase(beat.id)}
-                      disabled={createCheckout.isPending}
-                      className="glow-purple"
-                    >
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      Buy Now
-                    </Button>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-bold text-primary">${(beat.price / 100).toFixed(2)}</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2">
+                      <Button
+                        onClick={() => handlePurchase(beat.id)}
+                        disabled={createCheckout.isPending}
+                        className="glow-purple w-full"
+                        size="sm"
+                      >
+                        <ShoppingCart className="w-4 h-4 mr-1" />
+                        Purchase
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => {
+                          const audio = document.getElementById(`audio-${beat.id}`) as HTMLAudioElement;
+                          if (audio) {
+                            if (audio.paused) {
+                              audio.play();
+                              toast.success("Playing preview...");
+                            } else {
+                              audio.pause();
+                              toast.info("Preview paused");
+                            }
+                          }
+                        }}
+                      >
+                        <Play className="w-4 h-4 mr-1" />
+                        Preview
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => {
+                          toast.success("Redirecting to collaboration inquiry...");
+                          window.location.href = `/contact?beat=${encodeURIComponent(beat.title)}&type=collaborate`;
+                        }}
+                      >
+                        <Handshake className="w-4 h-4 mr-1" />
+                        Collab
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))}
