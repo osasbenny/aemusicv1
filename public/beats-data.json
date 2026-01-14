@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "title": "Say Say",
+    "genre": "Hip Hop",
+    "mood": "Energetic",
+    "bpm": 140,
+    "price": 7500,
+    "description": "High-energy hip hop beat with powerful drums and melodic elements. Perfect for rap vocals and energetic performances.",
+    "audioUrl": "/beats/saysay.mp3",
+    "licenseType": "Basic",
+    "isActive": "true"
+  },
+  {
+    "id": 2,
+    "title": "Rush",
+    "genre": "Trap",
+    "mood": "Aggressive",
+    "bpm": 145,
+    "price": 7500,
+    "description": "Hard-hitting trap beat with heavy 808s and crisp hi-hats. Ideal for aggressive rap styles and club bangers.",
+    "audioUrl": "/beats/rushmst2.mp3",
+    "licenseType": "Basic",
+    "isActive": "true"
+  },
+  {
+    "id": 3,
+    "title": "Order",
+    "genre": "Hip Hop",
+    "mood": "Dark",
+    "bpm": 138,
+    "price": 7500,
+    "description": "Dark atmospheric hip hop beat with deep bass and haunting melodies. Perfect for storytelling and introspective tracks.",
+    "audioUrl": "/beats/ordermst2.mp3",
+    "licenseType": "Basic",
+    "isActive": "true"
+  }
+]
